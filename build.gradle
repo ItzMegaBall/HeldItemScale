@@ -1,0 +1,63 @@
+plugins {
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+
+repositories {
+	// Mod Menu (compile-time API for the config-screen entrypoint)
+	maven {
+		name = 'Terraformers'
+		url = 'https://maven.terraformersmc.com/'
+	}
+}
+
+loom {
+	splitEnvironmentSourceSets()
+
+	mods {
+		"helditemscale" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// Mod Menu API (the mod only touches it from ModMenuIntegration; Mod Menu stays optional at runtime).
+	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+	// Needed only so Mod Menu runs in the development client (./gradlew runClient). Not a dependency of the mod.
+	modLocalRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+
+	from("LICENSE") {
+		rename { "${it}_$projectName"}
+	}
+}
